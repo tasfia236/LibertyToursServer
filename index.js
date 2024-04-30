@@ -27,12 +27,22 @@ async function run() {
         await client.connect();
 
         const tourspotCollection = client.db('tourspotsDB').collection('tourspots');
+        const countryCollection = client.db('tourspotsDB').collection('countries');
 
         app.get('/tourspots', async (req, res) => {
-            const cursor = tourspotCollection.find();
+            const cursor = tourspotCollection.find().sort({ average_cost: -1 });
             const result = await cursor.toArray();
             res.send(result);
         })
+
+        app.get('/tourspots/:id', async (req, res) => {
+            const id = req.params.id;
+            const quary = { _id: new ObjectId(id) }
+
+            const result = await tourspotCollection.findOne(quary);
+            res.send(result);
+        })
+
 
         app.post('/tourspots', async (req, res) => {
             const newSpot = req.body;
@@ -41,16 +51,61 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/mylist/:email', async (req, res) => {
+            console.log(req.params.email);
+            const result = await tourspotCollection.find({ user_email: req.params.email }).toArray();
+            res.send(result);
+        })
+
+        app.get('/country', async (req, res) => {
+            const cursor = countryCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+        app.get('/country/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const quary = { _id: new ObjectId(id) }
+            const result = await countryCollection.findOne(quary);
+            res.send(result);
+        })
+        
+        // app.get('/country/:country', async (req, res) => {
+        //     console.log(req.body);
+        //     const result = await tourspotCollection.find({ user_email: req.params.email }).toArray();
+        //     res.send(result);
+        // })
+
+        app.put('/tourspots/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const options = { upsert: true };
+            const updateSpots = req.body
+            const spots = {
+                $set: {
+                    image: updateSpots.image,
+                    tourists_spot_name: updateSpots.tourists_spot_name,
+                    country_Name: updateSpots.image,
+                    average_cost: updateSpots.average_cost,
+                    location: updateSpots.location,
+                    description: updateSpots.description,
+                    travel_time: updateSpots.travel_time,
+                    seasonality: updateSpots.seasonality,
+                    totaVisitorsPerYear: updateSpots.totaVisitorsPerYear
+                }
+            }
+            const result = await tourspotCollection.updateOne(filter, spots, options);
+            res.send(result);
+        });
+
         app.delete('/tourspots/:id', async (req, res) => {
             const id = req.params.id;
-            const quary = {_id: new ObjectId(id)}
+            const quary = { _id: new ObjectId(id) }
             const result = await tourspotCollection.deleteOne(quary);
             res.send(result);
         })
 
-        app.update('/tourspots/:id', async (req, res) => {
-            
-        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
