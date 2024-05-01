@@ -30,7 +30,7 @@ async function run() {
         const countryCollection = client.db('tourspotsDB').collection('countries');
 
         app.get('/tourspots', async (req, res) => {
-            const cursor = tourspotCollection.find().sort({ average_cost: -1 });
+            const cursor = tourspotCollection.find();
             const result = await cursor.toArray();
             res.send(result);
         })
@@ -38,7 +38,6 @@ async function run() {
         app.get('/tourspots/:id', async (req, res) => {
             const id = req.params.id;
             const quary = { _id: new ObjectId(id) }
-
             const result = await tourspotCollection.findOne(quary);
             res.send(result);
         })
@@ -57,25 +56,27 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/country', async (req, res) => {
-            const cursor = countryCollection.find();
-            const result = await cursor.toArray();
-            res.send(result);
-        })
+            app.get('/singlecountyspots/:country', async (req, res) => {
+                console.log(req.params.country);
+                const result = await tourspotCollection.find({country_Name : req.params.country }).toArray();
+                res.send(result);
+                console.log(result);
+            })
 
-        app.get('/country/:id', async (req, res) => {
-            const id = req.params.id;
-            console.log(id);
-            const quary = { _id: new ObjectId(id) }
-            const result = await countryCollection.findOne(quary);
-            res.send(result);
-        })
+            app.get('/country', async (req, res) => {
+                const cursor = countryCollection.find();
+                const result = await cursor.toArray();
+                res.send(result);
+            })
+
+            app.get('/country/:id', async (req, res) => {
+                const id = req.params.id;
+                console.log(id);
+                const quary = { _id: new ObjectId(id) }
+                const result = await countryCollection.findOne(quary);
+                res.send(result);
+            })
         
-        // app.get('/country/:country', async (req, res) => {
-        //     console.log(req.body);
-        //     const result = await tourspotCollection.find({ user_email: req.params.email }).toArray();
-        //     res.send(result);
-        // })
 
         app.put('/tourspots/:id', async (req, res) => {
             const id = req.params.id;
@@ -86,7 +87,7 @@ async function run() {
                 $set: {
                     image: updateSpots.image,
                     tourists_spot_name: updateSpots.tourists_spot_name,
-                    country_Name: updateSpots.image,
+                    country_Name: updateSpots.country_Name,
                     average_cost: updateSpots.average_cost,
                     location: updateSpots.location,
                     description: updateSpots.description,
